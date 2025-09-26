@@ -58,8 +58,14 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // Fix: Initialize GoogleGenAI with process.env.API_KEY as per the guidelines.
-  const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
+  // FIX: Adhere to the guideline of using process.env.API_KEY for the API key. This resolves the TypeScript error with `import.meta.env`.
+  const apiKey = process.env.API_KEY;
+
+  if (!apiKey) {
+    throw new Error('API_KEY environment variable not set. Please configure it in your deployment environment.');
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
@@ -138,13 +144,8 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
   } catch (error) {
     console.error("Error generating recipes:", error);
     if (error instanceof Error) {
-        // Re-throw specific, actionable errors
-        if (error.message.includes('API key not valid')) {
-             // Fix: Updated error message to be more generic and not expose implementation details.
-             throw new Error('The API key is not valid.');
-        }
         throw error;
     }
-    throw new Error("Failed to generate recipes from the API. Check the console for more details.");
+    throw new Error("An unexpected error occurred while generating recipes.");
   }
 };
