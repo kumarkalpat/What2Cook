@@ -58,7 +58,7 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: Replaced Vite-specific environment variable `import.meta.env.VITE_API_KEY` with `process.env.API_KEY` and updated GoogleGenAI initialization to align with coding guidelines. This resolves the TypeScript error 'Property 'env' does not exist on type 'ImportMeta''.
+  // FIX: Per coding guidelines, the API key must be sourced directly from `process.env.API_KEY`. This also resolves the TypeScript error.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
@@ -137,7 +137,6 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
 
   } catch (error) {
     console.error("Error generating recipes:", error);
-    // FIX: Removed custom API key validation from the catch block, per guidelines to assume the key is valid.
     if (error instanceof Error) {
         throw error;
     }
