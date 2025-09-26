@@ -135,7 +135,16 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
                 },
             });
 
-            const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
+            // === CRITICAL CHECK ADDED HERE ===
+            // Ensure the response structure contains the necessary data before attempting to access it.
+            const generatedImage = imageResponse.generatedImages?.[0];
+
+            if (!generatedImage || !generatedImage.image || !generatedImage.image.imageBytes) {
+                // Throwing an error here makes the catch block log a specific message.
+                throw new Error("Image generation failed or returned no image data (check Vercel logs for specific API error, potentially related to quota or safety filters).");
+            }
+
+            const base64ImageBytes: string = generatedImage.image.imageBytes;
             const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
             recipesWithImages.push({ ...recipe, imageUrl });
 
