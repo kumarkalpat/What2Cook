@@ -58,7 +58,7 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: The API key must be obtained exclusively from `process.env.API_KEY` as per coding guidelines. This also resolves the TypeScript error with `import.meta.env`.
+  // FIX: The API key must be obtained from `process.env.API_KEY`.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
@@ -78,7 +78,7 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
     }
   }
 
-  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : '';
+  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : ''
 
   const prompt = `
     Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
@@ -140,7 +140,7 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
     if (error instanceof Error) {
         // Re-throw specific, actionable errors
         if (error.message.includes('API key not valid')) {
-             // FIX: Update error message to refer to API_KEY as per the change in API key handling.
+             // FIX: Updated error message to reference the correct environment variable.
              throw new Error('The provided API Key is not valid. Please check your API_KEY environment variable.');
         }
         throw error;
