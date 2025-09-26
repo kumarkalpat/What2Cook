@@ -75,9 +75,6 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
 
   return (
     <div>
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
-            <h2 className="text-3xl font-bold text-dark dark:text-light pl-2 mb-4 sm:mb-0">Your Culinary Creations</h2>
-        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {recipes.map((recipe, index) => (
                 <RecipeCard
