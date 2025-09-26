@@ -3,6 +3,7 @@ import type { FormData } from '../types';
 import { IngredientInput } from './IngredientInput';
 import { Spinner } from './Spinner';
 import * as storageService from '../services/storageService';
+import { OptionSelector } from './OptionSelector';
 
 interface RecipeFormProps {
   onSubmit: (formData: FormData) => void;
@@ -19,21 +20,10 @@ const Button: React.FC<{ isLoading: boolean; children: React.ReactNode }> = ({ i
   </button>
 );
 
-const FormSelect: React.FC<{ id: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; children: React.ReactNode }> = ({ id, label, value, onChange, children }) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-dark/90 dark:text-light/90 mb-1">
-      {label}
-    </label>
-    <select
-      id={id}
-      value={value}
-      onChange={onChange}
-      className="w-full p-2 border border-secondary/50 dark:border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-transparent dark:bg-primary/20 text-dark dark:text-light"
-    >
-      {children}
-    </select>
-  </div>
-);
+const mealTypeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack'] as const;
+const cuisineOptions = ['Any', 'Italian', 'Mexican', 'Indian', 'Chinese', 'Japanese', 'Thai', 'American'] as const;
+const indianRegionOptions = ['Any', 'North', 'South'] as const;
+const dietOptions = ['None', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Keto'] as const;
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({ onSubmit, isLoading }) => {
   const [ingredients, setIngredients] = useState<string[]>(() => {
@@ -46,16 +36,18 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onSubmit, isLoading }) =
   const [cuisine, setCuisine] = useState('Indian');
   const [diet, setDiet] = useState('Vegetarian');
   const [indianCuisineRegion, setIndianCuisineRegion] = useState('Any');
+  const [specialRequests, setSpecialRequests] = useState('');
   
   useEffect(() => {
     storageService.saveIngredients(ingredients);
   }, [ingredients]);
-
-  useEffect(() => {
-    if (cuisine !== 'Indian') {
+  
+  const handleCuisineChange = (value: string) => {
+    setCuisine(value);
+    if (value !== 'Indian') {
       setIndianCuisineRegion('Any');
     }
-  }, [cuisine]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,48 +55,57 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onSubmit, isLoading }) =
       alert("Please add at least one ingredient.");
       return;
     }
-    onSubmit({ ingredients, mealType, cuisine, diet, indianCuisineRegion });
+    onSubmit({ ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <IngredientInput ingredients={ingredients} setIngredients={setIngredients} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <FormSelect id="mealType" label="Meal Type" value={mealType} onChange={(e) => setMealType(e.target.value)}>
-          <option>Breakfast</option>
-          <option>Lunch</option>
-          <option>Dinner</option>
-          <option>Dessert</option>
-          <option>Snack</option>
-        </FormSelect>
-
-        <FormSelect id="cuisine" label="Cuisine" value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-          <option value="any">Any</option>
-          <option>Italian</option>
-          <option>Mexican</option>
-          <option>Indian</option>
-          <option>Chinese</option>
-          <option>Japanese</option>
-          <option>Thai</option>
-          <option>American</option>
-        </FormSelect>
-
+      <div className="space-y-6">
+        <OptionSelector 
+          id="mealType"
+          label="Meal Type"
+          options={mealTypeOptions}
+          selectedValue={mealType}
+          onSelect={setMealType}
+        />
+        <OptionSelector 
+          id="cuisine"
+          label="Cuisine"
+          options={cuisineOptions}
+          selectedValue={cuisine}
+          onSelect={handleCuisineChange}
+        />
         {cuisine === 'Indian' && (
-          <FormSelect id="indianCuisine" label="Indian Cuisine Region" value={indianCuisineRegion} onChange={(e) => setIndianCuisineRegion(e.target.value)}>
-            <option>Any</option>
-            <option>North</option>
-            <option>South</option>
-          </FormSelect>
+          <OptionSelector 
+            id="indianCuisine"
+            label="Indian Cuisine Region"
+            options={indianRegionOptions}
+            selectedValue={indianCuisineRegion}
+            onSelect={setIndianCuisineRegion}
+          />
         )}
-
-        <FormSelect id="diet" label="Dietary Preference" value={diet} onChange={(e) => setDiet(e.target.value)}>
-          <option value="none">None</option>
-          <option>Vegetarian</option>
-          <option>Vegan</option>
-          <option>Gluten-Free</option>
-          <option>Keto</option>
-        </FormSelect>
+        <OptionSelector
+          id="diet"
+          label="Dietary Preference"
+          options={dietOptions}
+          selectedValue={diet}
+          onSelect={setDiet}
+        />
+        <div>
+            <label htmlFor="specialRequests" className="block text-sm font-medium text-dark/90 dark:text-light/90 mb-2">
+                Special Requests <span className="text-muted">(Optional)</span>
+            </label>
+            <textarea
+                id="specialRequests"
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+                rows={3}
+                placeholder="e.g., make it extra spicy, low-carb, kid-friendly, use an air fryer..."
+                className="w-full p-2 border border-secondary/50 dark:border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-transparent dark:bg-primary/20 text-dark dark:text-light placeholder-muted"
+            />
+        </div>
       </div>
       
       <Button isLoading={isLoading}>Generate Recipes</Button>

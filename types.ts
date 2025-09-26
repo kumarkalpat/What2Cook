@@ -20,4 +20,5 @@ export interface FormData {
   cuisine: string;
   diet: string;
   indianCuisineRegion?: string;
+  specialRequests?: string;
 }

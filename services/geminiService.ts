@@ -64,16 +64,16 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  const { ingredients, mealType, cuisine, diet, indianCuisineRegion } = formData;
+  const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
   if (ingredients.length === 0) {
     throw new Error("Please provide at least one ingredient.");
   }
   
-  const dietPreference = diet === 'none' ? '' : `that is ${diet}`;
+  const dietPreference = diet === 'None' ? '' : `that is ${diet}`;
   
   let cuisineInstruction = '';
-  if (cuisine !== 'any') {
+  if (cuisine !== 'Any') {
     if (cuisine === 'Indian' && indianCuisineRegion && indianCuisineRegion !== 'Any') {
       cuisineInstruction = `The recipes MUST be authentic ${indianCuisineRegion} Indian cuisine. Do not suggest recipes from other regions of India.`;
     } else {
@@ -81,10 +81,13 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
     }
   }
 
+  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : '';
+
   const prompt = `
     Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
     ${cuisineInstruction}
     The user has the following ingredients available: ${ingredients.join(', ')}.
+    ${specialRequestInstruction}
     The recipes should primarily use these ingredients, but you can include a few common pantry staples if necessary (like oil, salt, pepper, spices).
     For each recipe, provide a name, a short description, prep time, cook time, servings, a list of ingredients with quantities, and step-by-step instructions.
     Ensure the final output strictly adheres to the provided JSON schema.
