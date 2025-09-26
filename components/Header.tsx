@@ -39,7 +39,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowSaved }) => {
   return (
     <header className="bg-light/80 dark:bg-dark/80 backdrop-blur-sm shadow-md w-full sticky top-0 z-10 border-b border-secondary/20 dark:border-primary/20 transition-colors duration-300">
-      <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+      <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between max-w-6xl">
         <div className="flex items-center">
             <CookingIcon className="w-8 h-8 text-primary dark:text-secondary mr-3" />
             <h1 className="font-script text-4xl text-dark dark:text-light">
