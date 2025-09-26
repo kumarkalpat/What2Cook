@@ -58,8 +58,7 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // Fix: Use process.env.API_KEY directly for GoogleGenAI initialization as per the guidelines.
-  // This resolves the 'import.meta.env' error and adheres to the specified method for API key handling.
+  // FIX: The API key must be obtained exclusively from `process.env.API_KEY` as per coding guidelines. This also resolves the TypeScript error with `import.meta.env`.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
@@ -139,6 +138,11 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
   } catch (error) {
     console.error("Error generating recipes:", error);
     if (error instanceof Error) {
+        // Re-throw specific, actionable errors
+        if (error.message.includes('API key not valid')) {
+             // FIX: Update error message to refer to API_KEY as per the change in API key handling.
+             throw new Error('The provided API Key is not valid. Please check your API_KEY environment variable.');
+        }
         throw error;
     }
     throw new Error("Failed to generate recipes from the API. Check the console for more details.");
