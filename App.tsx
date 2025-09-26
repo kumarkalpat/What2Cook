@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Recipe, FormData } from './types';
 import { generateRecipes } from './services/geminiService';
@@ -51,7 +52,11 @@ const App: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      setError('An unexpected error occurred. Please try again later.');
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     } finally {
       setIsLoading(false);
     }
