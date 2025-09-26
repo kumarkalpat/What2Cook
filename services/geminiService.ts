@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Recipe, FormData } from '../types';
 
@@ -59,10 +58,8 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set. Please configure it in your deployment environment.");
-  }
-  
+  // Fix: Per coding guidelines, the API key must be obtained exclusively from `process.env.API_KEY`.
+  // The environment variable is assumed to be pre-configured and accessible.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
