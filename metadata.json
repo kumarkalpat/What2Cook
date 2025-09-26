@@ -1,0 +1,5 @@
+{
+  "name": "What2Cook",
+  "description": "An intelligent recipe generator that creates custom recipes based on the ingredients you have on hand, powered by the Gemini API.",
+  "requestFramePermissions": []
+}
