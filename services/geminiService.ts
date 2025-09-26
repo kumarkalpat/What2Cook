@@ -59,7 +59,7 @@ const recipeSchema = {
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
   // Fix: Initialize GoogleGenAI with process.env.API_KEY as per the guidelines.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
