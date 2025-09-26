@@ -58,15 +58,8 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: Use process.env.API_KEY as per the coding guidelines to resolve TypeScript error.
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    // FIX: Updated error message to be more generic and refer to API_KEY.
-    throw new Error("API key not found. Please set API_KEY in your environment variables.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // FIX: Per coding guidelines, initialize GoogleGenAI with process.env.API_KEY directly.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
@@ -145,7 +138,7 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
   } catch (error) {
     console.error("Error generating recipes:", error);
     if (error instanceof Error && error.message.includes("API key not valid")) {
-        // FIX: Updated error message to refer to API_KEY.
+        // FIX: Updated error message to refer to the correct environment variable per coding guidelines.
         throw new Error("Your API key is not valid. Please check your API_KEY environment variable.");
     }
     throw new Error("Failed to generate recipes from the API. Check the console for more details.");
