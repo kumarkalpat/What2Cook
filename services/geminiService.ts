@@ -58,14 +58,9 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: Use process.env.API_KEY as per coding guidelines to resolve import.meta.env error.
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    throw new Error("API_KEY environment variable not set.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Fix: Use process.env.API_KEY directly for GoogleGenAI initialization as per the guidelines.
+  // This resolves the 'import.meta.env' error and adheres to the specified method for API key handling.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
