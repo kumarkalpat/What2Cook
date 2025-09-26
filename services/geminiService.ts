@@ -58,7 +58,7 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: The API key must be obtained from `process.env.API_KEY`.
+  // Fix: Initialize GoogleGenAI with process.env.API_KEY as per the guidelines.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
@@ -140,8 +140,8 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
     if (error instanceof Error) {
         // Re-throw specific, actionable errors
         if (error.message.includes('API key not valid')) {
-             // FIX: Updated error message to reference the correct environment variable.
-             throw new Error('The provided API Key is not valid. Please check your API_KEY environment variable.');
+             // Fix: Updated error message to be more generic and not expose implementation details.
+             throw new Error('The API key is not valid.');
         }
         throw error;
     }
