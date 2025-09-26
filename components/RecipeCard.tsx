@@ -34,9 +34,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSaved, onSave,
       )}
       <div className="p-6 flex flex-col flex-grow">
         <h3 className="text-2xl font-bold text-dark dark:text-light mb-2">{recipe.recipeName}</h3>
-        <p className="text-muted mb-4">{recipe.description}</p>
+        <p className="text-muted dark:text-light mb-4">{recipe.description}</p>
         
-        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-sm text-muted border-t border-b border-secondary/20 dark:border-primary/30 py-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-sm text-muted dark:text-light border-t border-b border-secondary/20 dark:border-primary/30 py-3">
           <div className="flex items-center">
               <ClockIcon className="w-5 h-5 mr-1.5 text-primary/80 stroke-2" />
               <strong>Prep:</strong><span className="ml-1">{recipe.prepTime}</span>
@@ -54,10 +54,10 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSaved, onSave,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-bold text-lg mb-2 text-dark dark:text-light">Ingredients</h4>
-            <ul className="space-y-1.5 text-muted dark:text-secondary list-disc list-inside">
+            <ul className="space-y-1.5 text-dark dark:text-light list-disc list-inside">
               {recipe.ingredients.map((ing, index) => (
-                <li key={index}>
-                  <span className="font-semibold text-dark dark:text-light">{ing.quantity}</span> {ing.name}
+                <li key={index} className="text-primary dark:text-secondary">
+                  <span className="font-semibold text-dark dark:text-light mr-2">{ing.quantity}</span>{ing.name}
                 </li>
               ))}
             </ul>
@@ -65,7 +65,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isSaved, onSave,
           
           <div>
             <h4 className="font-bold text-lg mb-2 text-dark dark:text-light">Instructions</h4>
-            <ol className="space-y-2 text-muted dark:text-secondary list-decimal list-inside">
+            <ol className="space-y-2 text-primary dark:text-secondary list-decimal list-inside">
               {recipe.instructions.map((step, index) => (
                 <li key={index} className="pl-2">{step}</li>
               ))}

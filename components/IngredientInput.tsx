@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 interface IngredientInputProps {
@@ -29,7 +30,7 @@ export const IngredientInput: React.FC<IngredientInputProps> = ({ ingredients, s
 
   return (
     <div>
-      <label htmlFor="ingredients" className="block text-sm font-medium text-dark/90 dark:text-light/90 mb-1">
+      <label htmlFor="ingredients" className="block text-sm font-medium text-primary dark:text-secondary mb-1">
         Available Ingredients
       </label>
       <div className="flex flex-wrap items-center gap-2 p-2 border border-secondary/50 dark:border-primary rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-colors bg-transparent dark:bg-primary/20">
@@ -66,7 +67,6 @@ export const IngredientInput: React.FC<IngredientInputProps> = ({ ingredients, s
             </button>
         </div>
       </div>
-      <p className="text-xs text-muted mt-1">Tip: Add ingredients by clicking 'Add' or pressing Enter/comma.</p>
     </div>
   );
 };

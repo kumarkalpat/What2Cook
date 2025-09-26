@@ -11,7 +11,7 @@ interface OptionSelectorProps {
 export const OptionSelector: React.FC<OptionSelectorProps> = ({ label, options, selectedValue, onSelect, id }) => {
   return (
     <div>
-      <label id={id} className="block text-sm font-medium text-dark/90 dark:text-light/90 mb-2">
+      <label id={id} className="block text-sm font-medium text-primary dark:text-secondary mb-2">
         {label}
       </label>
       <div className="flex flex-wrap gap-2" role="group" aria-labelledby={id}>

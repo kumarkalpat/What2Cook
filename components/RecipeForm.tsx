@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { FormData } from '../types';
 import { IngredientInput } from './IngredientInput';
@@ -62,50 +63,58 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({ onSubmit, isLoading }) =
     <form onSubmit={handleSubmit} className="space-y-6">
       <IngredientInput ingredients={ingredients} setIngredients={setIngredients} />
       
-      <div className="space-y-6">
-        <OptionSelector 
-          id="mealType"
-          label="Meal Type"
-          options={mealTypeOptions}
-          selectedValue={mealType}
-          onSelect={setMealType}
-        />
-        <OptionSelector 
-          id="cuisine"
-          label="Cuisine"
-          options={cuisineOptions}
-          selectedValue={cuisine}
-          onSelect={handleCuisineChange}
-        />
-        {cuisine === 'Indian' && (
-          <OptionSelector 
-            id="indianCuisine"
-            label="Indian Cuisine Region"
-            options={indianRegionOptions}
-            selectedValue={indianCuisineRegion}
-            onSelect={setIndianCuisineRegion}
-          />
-        )}
-        <OptionSelector
-          id="diet"
-          label="Dietary Preference"
-          options={dietOptions}
-          selectedValue={diet}
-          onSelect={setDiet}
-        />
-        <div>
-            <label htmlFor="specialRequests" className="block text-sm font-medium text-dark/90 dark:text-light/90 mb-2">
-                Special Requests <span className="text-muted">(Optional)</span>
-            </label>
-            <textarea
-                id="specialRequests"
-                value={specialRequests}
-                onChange={(e) => setSpecialRequests(e.target.value)}
-                rows={3}
-                placeholder="e.g., make it extra spicy, low-carb, kid-friendly, use an air fryer..."
-                className="w-full p-2 border border-secondary/50 dark:border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-transparent dark:bg-primary/20 text-dark dark:text-light placeholder-muted"
+      <div>
+        <label className="block text-sm font-medium text-primary dark:text-secondary mb-2">
+            Recipe Preferences
+        </label>
+        <div className="p-4 space-y-4 border border-secondary/50 dark:border-primary rounded-lg bg-transparent dark:bg-primary/20">
+            <OptionSelector 
+              id="mealType"
+              label="Meal Type"
+              options={mealTypeOptions}
+              selectedValue={mealType}
+              onSelect={setMealType}
+            />
+            <OptionSelector 
+              id="cuisine"
+              label="Cuisine"
+              options={cuisineOptions}
+              selectedValue={cuisine}
+              onSelect={handleCuisineChange}
+            />
+            {cuisine === 'Indian' && (
+              <div className="pl-4 ml-2 border-l-2 border-secondary/30 dark:border-primary/50">
+                <OptionSelector 
+                  id="indianCuisine"
+                  label="Indian Cuisine Region"
+                  options={indianRegionOptions}
+                  selectedValue={indianCuisineRegion}
+                  onSelect={setIndianCuisineRegion}
+                />
+              </div>
+            )}
+            <OptionSelector
+              id="diet"
+              label="Dietary Preference"
+              options={dietOptions}
+              selectedValue={diet}
+              onSelect={setDiet}
             />
         </div>
+      </div>
+      
+      <div>
+          <label htmlFor="specialRequests" className="block text-sm font-medium text-primary dark:text-secondary mb-2">
+              Special Requests <span className="text-muted">(Optional)</span>
+          </label>
+          <textarea
+              id="specialRequests"
+              value={specialRequests}
+              onChange={(e) => setSpecialRequests(e.target.value)}
+              rows={2}
+              placeholder="e.g., make it extra spicy, low-carb, kid-friendly, use an air fryer..."
+              className="w-full p-2 border border-secondary/50 dark:border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-transparent dark:bg-primary/20 text-dark dark:text-light placeholder-muted"
+          />
       </div>
       
       <Button isLoading={isLoading}>Generate Recipes</Button>
