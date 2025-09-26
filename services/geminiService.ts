@@ -58,7 +58,8 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: Per coding guidelines, initialize GoogleGenAI with process.env.API_KEY directly.
+  // FIX: Initialize GoogleGenAI client using process.env.API_KEY as per the guidelines.
+  // This resolves the error "Property 'env' does not exist on type 'ImportMeta'" by removing the problematic line.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
@@ -137,9 +138,12 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
 
   } catch (error) {
     console.error("Error generating recipes:", error);
+    // FIX: Updated the error message to refer to API_KEY instead of VITE_API_KEY to align with the new API key handling.
     if (error instanceof Error && error.message.includes("API key not valid")) {
-        // FIX: Updated error message to refer to the correct environment variable per coding guidelines.
         throw new Error("Your API key is not valid. Please check your API_KEY environment variable.");
+    }
+    if (error instanceof Error) {
+        throw error;
     }
     throw new Error("Failed to generate recipes from the API. Check the console for more details.");
   }
