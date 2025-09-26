@@ -58,14 +58,8 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // FIX: Adhere to the guideline of using process.env.API_KEY for the API key. This resolves the TypeScript error with `import.meta.env`.
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey) {
-    throw new Error('API_KEY environment variable not set. Please configure it in your deployment environment.');
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Fix: Adhere to the guideline for API key initialization from process.env.API_KEY. This also resolves the TypeScript error.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
@@ -144,6 +138,7 @@ export const generateRecipes = async (formData: FormData): Promise<Recipe[] | nu
   } catch (error) {
     console.error("Error generating recipes:", error);
     if (error instanceof Error) {
+        // Re-throw the original error to show the specific message in the UI
         throw error;
     }
     throw new Error("An unexpected error occurred while generating recipes.");
