@@ -61,90 +61,104 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // Fix: Per coding guidelines, initialize with API key directly from process.env.API_KEY.
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  // === FIX APPLIED HERE ===
+  // Vercel best practice and the Gemini SDK standard recommend GEMINI_API_KEY.
+  // Ensure the Vercel environment variable is set to this name.
+  const apiKey = process.env.GEMINI_API_KEY; 
 
-  const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
+  if (!apiKey) {
+    // Throw an explicit error if the key is missing to help with debugging
+    throw new Error("GEMINI_API_KEY environment variable is not set.");
+  }
 
-  if (ingredients.length === 0) {
-    throw new Error("Please provide at least one ingredient.");
-  }
-  
-  const dietPreference = diet === 'None' ? '' : `that is ${diet}`;
-  
-  let cuisineInstruction = '';
-  if (cuisine !== 'Any') {
-    if (cuisine === 'Indian' && indianCuisineRegion && indianCuisineRegion !== 'Any') {
-      cuisineInstruction = `The recipes MUST be authentic ${indianCuisineRegion} Indian cuisine. Do not suggest recipes from other regions of India.`;
-    } else {
-      cuisineInstruction = `The recipes should be in the style of ${cuisine} cuisine.`;
-    }
-  }
+  const ai = new GoogleGenAI({ apiKey: apiKey });
 
-  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : ''
+  const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
-  const prompt = `
-    Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
-    ${cuisineInstruction}
-    The user has the following ingredients available: ${ingredients.join(', ')}.
-    ${specialRequestInstruction}
-    The recipes should primarily use these ingredients, but you can include a few common pantry staples if necessary (like oil, salt, pepper, spices).
-    For each recipe, provide a name, a short description, prep time, cook time, servings, a list of ingredients with quantities, and step-by-step instructions.
-    Ensure the final output strictly adheres to the provided JSON schema.
-  `;
+  if (ingredients.length === 0) {
+    throw new Error("Please provide at least one ingredient.");
+  }
+  
+  const dietPreference = diet === 'None' ? '' : `that is ${diet}`;
+  
+  let cuisineInstruction = '';
+  if (cuisine !== 'Any') {
+    if (cuisine === 'Indian' && indianCuisineRegion && indianCuisineRegion !== 'Any') {
+      cuisineInstruction = `The recipes MUST be authentic ${indianCuisineRegion} Indian cuisine. Do not suggest recipes from other regions of India.`;
+    } else {
+      cuisineInstruction = `The recipes should be in the style of ${cuisine} cuisine.`;
+    }
+  }
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: recipeSchema,
-      },
-    });
+  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : ''
 
-    const jsonText = response.text.trim();
-    const recipesData = JSON.parse(jsonText) as Omit<Recipe, 'imageUrl'>[];
+  const prompt = `
+    Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
+    ${cuisineInstruction}
+    The user has the following ingredients available: ${ingredients.join(', ')}.
+    ${specialRequestInstruction}
+    The recipes should primarily use these ingredients, but you can include a few common pantry staples if necessary (like oil, salt, pepper, spices).
+    For each recipe, provide a name, a short description, prep time, cook time, servings, a list of ingredients with quantities, and step-by-step instructions.
+    Ensure the final output strictly adheres to the provided JSON schema.
+  `;
 
-    if (!recipesData || recipesData.length === 0) {
-        return null;
-    }
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: recipeSchema,
+      },
+    });
 
-    // Generate an image for each recipe
-    const recipesWithImages = await Promise.all(
-        recipesData.map(async (recipe) => {
-            try {
-                const imagePrompt = `A delicious, professional food photograph of "${recipe.recipeName}". ${recipe.description}. The image should be vibrant, appetizing, and well-lit with a clean background.`;
-                // Using the correct model for high-quality image generation as per guidelines
-                const imageResponse = await ai.models.generateImages({
-                    model: 'imagen-4.0-generate-001',
-                    prompt: imagePrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: '16:9',
-                    },
-                });
+    const jsonText = response.text.trim();
+    const recipesData = JSON.parse(jsonText) as Omit<Recipe, 'imageUrl'>[];
 
-                const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
-                const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
-                return { ...recipe, imageUrl };
+    if (!recipesData || recipesData.length === 0) {
+        return null;
+    }
 
-            } catch (imageError) {
-                console.error(`Failed to generate image for recipe "${recipe.recipeName}":`, imageError);
-                return { ...recipe, imageUrl: undefined }; // Proceed without an image if generation fails
-            }
-        })
-    );
-    
-    return recipesWithImages;
+    // Generate images sequentially with a delay to avoid rate-limiting errors.
+    const recipesWithImages: Recipe[] = [];
+    for (const [index, recipe] of recipesData.entries()) {
+        try {
+            const imagePrompt = `A delicious, professional food photograph of "${recipe.recipeName}". ${recipe.description}. The image should be vibrant, appetizing, and well-lit with a clean background.`;
+            // Updated to use imagen-3.0-generate-002 for optimal quality
+            const imageResponse = await ai.models.generateImages({
+                model: 'imagen-3.0-generate-002',
+                prompt: imagePrompt,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/jpeg',
+                    aspectRatio: '16:9',
+                },
+            });
 
-  } catch (error) {
-    console.error("Error generating recipes:", error);
-    if (error instanceof Error) {
-        // Re-throw the original error to show the specific message in the UI
-        throw error;
-    }
-    throw new Error("An unexpected error occurred while generating recipes.");
-  }
+            const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
+            const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
+            recipesWithImages.push({ ...recipe, imageUrl });
+
+        } catch (imageError) {
+            console.error(`Failed to generate image for recipe "${recipe.recipeName}":`, imageError);
+            // Proceed without an image if generation fails for any reason (e.g., rate limit, safety).
+            recipesWithImages.push({ ...recipe, imageUrl: undefined }); 
+        }
+
+        // If it's not the last recipe, wait 1 second before the next API call to avoid rate limits.
+        if (index < recipesData.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    return recipesWithImages;
+
+  } catch (error) {
+    console.error("Error generating recipes:", error);
+    if (error instanceof Error) {
+        // Re-throw the original error to show the specific message in the UI
+        throw error;
+    }
+    throw new Error("An unexpected error occurred while generating recipes.");
+  }
 };
