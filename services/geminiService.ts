@@ -61,99 +61,90 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[] | null> => {
-  // === FIX APPLIED HERE ===
-  // Vercel best practice and the Gemini SDK standard recommend GEMINI_API_KEY.
-  // Ensure the Vercel environment variable is set to this name.
-  const apiKey = process.env.GEMINI_API_KEY; 
+  // Fix: Per coding guidelines, initialize with API key directly from process.env.API_KEY.
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  if (!apiKey) {
-    // Throw an explicit error if the key is missing to help with debugging
-    throw new Error("GEMINI_API_KEY environment variable is not set.");
-  }
+  const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
 
-  const ai = new GoogleGenAI({ apiKey: apiKey });
+  if (ingredients.length === 0) {
+    throw new Error("Please provide at least one ingredient.");
+  }
+  
+  const dietPreference = diet === 'None' ? '' : `that is ${diet}`;
+  
+  let cuisineInstruction = '';
+  if (cuisine !== 'Any') {
+    if (cuisine === 'Indian' && indianCuisineRegion && indianCuisineRegion !== 'Any') {
+      cuisineInstruction = `The recipes MUST be authentic ${indianCuisineRegion} Indian cuisine. Do not suggest recipes from other regions of India.`;
+    } else {
+      cuisineInstruction = `The recipes should be in the style of ${cuisine} cuisine.`;
+    }
+  }
 
-  const { ingredients, mealType, cuisine, diet, indianCuisineRegion, specialRequests } = formData;
+  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : ''
 
-  if (ingredients.length === 0) {
-    throw new Error("Please provide at least one ingredient.");
-  }
-  
-  const dietPreference = diet === 'None' ? '' : `that is ${diet}`;
-  
-  let cuisineInstruction = '';
-  if (cuisine !== 'Any') {
-    if (cuisine === 'Indian' && indianCuisineRegion && indianCuisineRegion !== 'Any') {
-      cuisineInstruction = `The recipes MUST be authentic ${indianCuisineRegion} Indian cuisine. Do not suggest recipes from other regions of India.`;
-    } else {
-      cuisineInstruction = `The recipes should be in the style of ${cuisine} cuisine.`;
-    }
-  }
+  const prompt = `
+    Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
+    ${cuisineInstruction}
+    The user has the following ingredients available: ${ingredients.join(', ')}.
+    ${specialRequestInstruction}
+    The recipes should primarily use these ingredients, but you can include a few common pantry staples if necessary (like oil, salt, pepper, spices).
+    For each recipe, provide a name, a short description, prep time, cook time, servings, a list of ingredients with quantities, and step-by-step instructions.
+    Ensure the final output strictly adheres to the provided JSON schema.
+  `;
 
-  const specialRequestInstruction = specialRequests ? `\nIMPORTANT: The user has a special request: "${specialRequests}". Please adhere to it.` : ''
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: recipeSchema,
+      },
+    });
 
-  const prompt = `
-    Generate 2 creative and delicious recipes for a ${mealType} ${dietPreference}.
-    ${cuisineInstruction}
-    The user has the following ingredients available: ${ingredients.join(', ')}.
-    ${specialRequestInstruction}
-    The recipes should primarily use these ingredients, but you can include a few common pantry staples if necessary (like oil, salt, pepper, spices).
-    For each recipe, provide a name, a short description, prep time, cook time, servings, a list of ingredients with quantities, and step-by-step instructions.
-    Ensure the final output strictly adheres to the provided JSON schema.
-  `;
+    const jsonText = response.text.trim();
+    const recipesData = JSON.parse(jsonText) as Omit<Recipe, 'imageUrl'>[];
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: recipeSchema,
-      },
-    });
+    if (!recipesData || recipesData.length === 0) {
+        return null;
+    }
 
-    const jsonText = response.text.trim();
-    const recipesData = JSON.parse(jsonText) as Omit<Recipe, 'imageUrl'>[];
+    // Generate an image for each recipe
+    const recipesWithImages = await Promise.all(
+        recipesData.map(async (recipe) => {
+            try {
+                const imagePrompt = `A delicious, professional food photograph of "${recipe.recipeName}". ${recipe.description}. The image should be vibrant, appetizing, and well-lit with a clean background.`;
+                // Using the correct model for high-quality image generation as per guidelines
+                const imageResponse = await ai.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: imagePrompt,
+                    config: {
+                        numberOfImages: 1,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: '16:9',
+                    },
+                });
 
-    if (!recipesData || recipesData.length === 0) {
-        return null;
-    }
+                const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
+                const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
+                return { ...recipe, imageUrl };
 
-    // Generate an image for each recipe
-    const recipesWithImages = await Promise.all(
-        recipesData.map(async (recipe) => {
-            try {
-                const imagePrompt = `A delicious, professional food photograph of "${recipe.recipeName}". ${recipe.description}. The image should be vibrant, appetizing, and well-lit with a clean background.`;
-                // Using the recommended model for high-quality image generation
-                const imageResponse = await ai.models.generateImages({
-                    model: 'imagen-3.0-generate-002',
-                    prompt: imagePrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: '16:9',
-                    },
-                });
+            } catch (imageError) {
+                console.error(`Failed to generate image for recipe "${recipe.recipeName}":`, imageError);
+                return { ...recipe, imageUrl: undefined }; // Proceed without an image if generation fails
+            }
+        })
+    );
+    
+    return recipesWithImages;
 
-                const base64ImageBytes: string = imageResponse.generatedImages[0].image.imageBytes;
-                const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
-                return { ...recipe, imageUrl };
-
-            } catch (imageError) {
-                console.error(`Failed to generate image for recipe "${recipe.recipeName}":`, imageError);
-                return { ...recipe, imageUrl: undefined }; // Proceed without an image if generation fails
-            }
-        })
-    );
-    
-    return recipesWithImages;
-
-  } catch (error) {
-    console.error("Error generating recipes:", error);
-    if (error instanceof Error) {
-        // Re-throw the original error to show the specific message in the UI
-        throw error;
-    }
-    throw new Error("An unexpected error occurred while generating recipes.");
-  }
+  } catch (error) {
+    console.error("Error generating recipes:", error);
+    if (error instanceof Error) {
+        // Re-throw the original error to show the specific message in the UI
+        throw error;
+    }
+    throw new Error("An unexpected error occurred while generating recipes.");
+  }
 };
