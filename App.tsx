@@ -6,7 +6,6 @@ import * as storageService from './services/storageService';
 import { Header } from './components/Header';
 import { RecipeForm } from './components/RecipeForm';
 import { RecipeList } from './components/RecipeList';
-import { Footer } from './components/Footer';
 import { useTheme } from './hooks/useTheme';
 import { SavedRecipes } from './components/SavedRecipes';
 
@@ -95,7 +94,6 @@ const App: React.FC = () => {
           <SavedRecipes onBack={() => setView('home')} onRemove={handleRemoveRecipe} />
         )}
       </main>
-      <Footer />
     </div>
   );
 };
