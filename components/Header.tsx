@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 
 const CookingIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -51,42 +50,23 @@ interface HeaderProps {
     onShowSaved: () => void;
 }
 
+const Tooltip: React.FC<{ isVisible: boolean; children: React.ReactNode; position?: 'center' | 'right' }> = ({ isVisible, children, position = 'center' }) => {
+    const positionClass = position === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2';
+    return (
+        <div
+            className={`absolute top-full mt-2 w-max px-3 py-1.5 bg-light dark:bg-dark text-dark dark:text-light border border-secondary/20 dark:border-primary/20 rounded-md shadow-lg transition-all duration-300 ease-in-out pointer-events-none transform ${positionClass} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 invisible'}`}
+            role="tooltip"
+        >
+            {children}
+        </div>
+    );
+};
+
+
 export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowSaved }) => {
-    const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-    const timeoutRef = useRef<number | null>(null);
-
-    const showTooltip = () => {
-        if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-        }
-        setIsTooltipVisible(true);
-    };
-
-    const hideTooltip = () => {
-        setIsTooltipVisible(false);
-    };
-    
-    const handleClick = () => {
-        if (isTooltipVisible) {
-            hideTooltip();
-            return;
-        }
-        
-        showTooltip();
-        timeoutRef.current = window.setTimeout(() => {
-            hideTooltip();
-        }, 2500); // Hide after 2.5 seconds
-    };
-    
-    // Cleanup timeout on component unmount
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
-        };
-    }, []);
+    const [isRecipesTooltipVisible, setIsRecipesTooltipVisible] = useState(false);
+    const [isThemeTooltipVisible, setIsThemeTooltipVisible] = useState(false);
+    const [isDevTooltipVisible, setIsDevTooltipVisible] = useState(false);
 
   return (
     <header className="bg-light/80 dark:bg-dark/80 backdrop-blur-sm shadow-md w-full sticky top-0 z-10 border-b border-secondary/20 dark:border-primary/20 transition-colors duration-300">
@@ -98,33 +78,50 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowSaved 
             </h1>
         </div>
         <div className="flex items-center gap-2">
-            <button
-              onClick={onShowSaved}
-              className="flex items-center gap-2 p-2 rounded-md text-primary dark:text-secondary/80 hover:bg-secondary/20 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-dark transition-colors duration-200 font-medium"
-              aria-label="View saved recipes"
-            >
-              <BookmarkIcon className="w-5 h-5" />
-              <span className="hidden sm:inline">My Recipes</span>
-            </button>
-            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             <div className="relative">
                 <button
-                onMouseEnter={showTooltip}
-                onMouseLeave={hideTooltip}
-                onClick={handleClick}
-                onFocus={showTooltip}
-                onBlur={hideTooltip}
-                className="p-2 rounded-full text-primary dark:text-secondary/80 hover:bg-secondary/20 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-dark transition-colors duration-200"
-                aria-label="Show developer credit"
+                  onClick={onShowSaved}
+                  onMouseEnter={() => setIsRecipesTooltipVisible(true)}
+                  onMouseLeave={() => setIsRecipesTooltipVisible(false)}
+                  onFocus={() => setIsRecipesTooltipVisible(true)}
+                  onBlur={() => setIsRecipesTooltipVisible(false)}
+                  className="flex items-center gap-2 p-2 rounded-md text-primary dark:text-secondary/80 hover:bg-secondary/20 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-dark transition-colors duration-200 font-medium"
+                  aria-label="View saved recipes"
+                >
+                  <BookmarkIcon className="w-5 h-5" />
+                  <span className="hidden sm:inline">My Recipes</span>
+                </button>
+                <Tooltip isVisible={isRecipesTooltipVisible}>
+                    <span className="text-sm">View saved recipes</span>
+                </Tooltip>
+            </div>
+            <div className="relative">
+                 <div
+                    onMouseEnter={() => setIsThemeTooltipVisible(true)}
+                    onMouseLeave={() => setIsThemeTooltipVisible(false)}
+                    onFocus={() => setIsThemeTooltipVisible(true)}
+                    onBlur={() => setIsThemeTooltipVisible(false)}
+                >
+                    <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+                </div>
+                <Tooltip isVisible={isThemeTooltipVisible}>
+                    <span className="text-sm">Switch to {theme === 'dark' ? 'light' : 'dark'} mode</span>
+                </Tooltip>
+            </div>
+            <div className="relative">
+                <button
+                    onMouseEnter={() => setIsDevTooltipVisible(true)}
+                    onMouseLeave={() => setIsDevTooltipVisible(false)}
+                    onFocus={() => setIsDevTooltipVisible(true)}
+                    onBlur={() => setIsDevTooltipVisible(false)}
+                    className="p-2 rounded-full text-primary dark:text-secondary/80 hover:bg-secondary/20 dark:hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-dark transition-colors duration-200"
+                    aria-label="Show developer credit"
                 >
                     <HumanIcon className="w-6 h-6" />
                 </button>
-                <div
-                    className={`absolute top-full right-0 mt-2 w-max px-4 py-2 bg-light dark:bg-dark text-dark dark:text-light border border-secondary/20 dark:border-primary/20 rounded-lg shadow-lg transition-all duration-300 ease-in-out pointer-events-none transform ${isTooltipVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 invisible'}`}
-                    role="tooltip"
-                >
-                    <span className="font-script text-lg">App designed by Kumar</span>
-                </div>
+                <Tooltip isVisible={isDevTooltipVisible} position="right">
+                    <span className="text-sm">App designed by Kumar</span>
+                </Tooltip>
             </div>
         </div>
       </div>
