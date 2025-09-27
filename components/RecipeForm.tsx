@@ -17,7 +17,7 @@ const Button: React.FC<{ isLoading: boolean; children: React.ReactNode }> = ({ i
     disabled={isLoading}
     className="w-full flex justify-center items-center bg-primary text-light font-bold py-3 px-6 rounded-lg hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-all duration-300 disabled:bg-primary/50 disabled:cursor-not-allowed"
   >
-    {isLoading ? <Spinner /> : children}
+    {isLoading ? <Spinner className="text-light" /> : children}
   </button>
 );
 

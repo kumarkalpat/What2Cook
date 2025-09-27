@@ -22,3 +22,16 @@ export interface FormData {
   indianCuisineRegion?: string;
   specialRequests?: string;
 }
+
+export interface ShoppingListItem {
+  name: string;
+  quantity: string; // The amount needed for the recipes
+  purchaseSize: string; // The typical amount sold in stores
+}
+
+export interface ShoppingListCategory {
+  category: string;
+  items: ShoppingListItem[];
+}
+
+export type ShoppingList = ShoppingListCategory[];
